@@ -117,7 +117,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
       containers: [
         {
           name: 'web-app'
-          image: !empty(containerImageName) ? containerImageName : 'mcr.microsoft.com/dotnet/samples:aspnetapp'
+          image: !empty(containerImageName) ? '${containerRegistryLoginServer}/${containerImageName}' : 'mcr.microsoft.com/dotnet/samples:aspnetapp'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
