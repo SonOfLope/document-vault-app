@@ -13,5 +13,14 @@
       "Host.Results": "Information",
       "Host.Aggregator": "Information"
     }
-  }
+  },
+  "extensions": {
+    "http": {
+      "routePrefix": "api",
+      "maxOutstandingRequests": 200,
+      "maxConcurrentRequests": 100,
+      "dynamicThrottlesEnabled": true
+    }
+  },
+  "functionTimeout": "00:10:00"
 }
