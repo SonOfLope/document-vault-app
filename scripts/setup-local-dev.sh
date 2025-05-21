@@ -39,6 +39,11 @@ docker run --rm --network container:azurite mcr.microsoft.com/azure-cli az stora
 # Stop Azurite container
 docker compose stop azurite
 
+
+# If you get evaluation errors from cosmosdb emulator, run : 
+# docker rmi -f mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+# docker volume rm -f arctiq_document-vault-app_cosmosdb-data
+
 # Start all services
 echo "Starting all services..."
 docker compose up -d --build
