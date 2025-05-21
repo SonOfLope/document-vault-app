@@ -1,0 +1,5 @@
+# c# apps gitignore
+bin/
+obj/
+cosmos-cert.pem
+.vscode/

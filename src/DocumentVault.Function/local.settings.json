@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "CosmosDb:Endpoint": "https://localhost:8081",
+    "CosmosDb:Key": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
+    "CosmosDb:DatabaseName": "DocumentVaultDB",
+    "CosmosDb:LinksContainerName": "Links",
+    "CosmosDb:DocumentsContainerName": "Documents",
+    "BlobStorage:ConnectionString": "UseDevelopmentStorage=true",
+    "BlobStorage:ContainerName": "documents",
+    "CdnEndpoint": "http://localhost:8080",
+    "APPINSIGHTS_INSTRUMENTATIONKEY": ""
+  }
+}
