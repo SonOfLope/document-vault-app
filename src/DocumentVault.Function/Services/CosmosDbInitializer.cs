@@ -41,8 +41,8 @@ namespace DocumentVault.Function.Services
                     cancellationToken: cancellationToken);
                 _logger.LogInformation($"Container {documentsContainerName} initialization completed with status: {documentsContainerResponse.StatusCode}");
                 
-                // Create Links container if it doesn't exist
-                var linksContainerProperties = new ContainerProperties(linksContainerName, "/id");
+                // Create Links container if it doesn't exist - using the DocumentType as partition key
+                var linksContainerProperties = new ContainerProperties(linksContainerName, "/DocumentType");
                 var linksContainerResponse = await database.CreateContainerIfNotExistsAsync(
                     linksContainerProperties, 
                     cancellationToken: cancellationToken);
@@ -63,7 +63,6 @@ namespace DocumentVault.Function.Services
         {
             _logger.LogInformation("Creating or updating stored procedures");
             
-            // Define the stored procedure for deleting expired links
             const string deleteExpiredLinksProcId = "spDeleteExpiredLinks";
             string deleteExpiredLinksSpBody = @"function deleteExpiredLinks() {
     var context = getContext();
@@ -71,17 +70,13 @@ namespace DocumentVault.Function.Services
     var response = context.getResponse();
     var collectionLink = collection.getSelfLink();
     
-    // Query to find expired links
-    var now = new Date().toISOString();
     var query = ""SELECT * FROM c WHERE c.ExpiresAt < GetCurrentDateTime()"";
     
-    // Set up the response body
     var responseBody = {
         deleted: 0,
         continuation: true
     };
     
-    // Query for documents
     var accepted = collection.queryDocuments(
         collectionLink,
         query,
@@ -97,7 +92,6 @@ namespace DocumentVault.Function.Services
                 return;
             }
             
-            // Process documents in batches
             tryDelete(documents, 0);
         }
     );

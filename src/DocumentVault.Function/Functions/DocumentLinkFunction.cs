@@ -101,7 +101,7 @@ namespace DocumentVault.Function.Functions
                     Url = $"{cdnUrl}?{sasToken}"
                 };
                 
-                await linksContainer.CreateItemAsync(link, new PartitionKey(link.Id));
+                await linksContainer.CreateItemAsync(link, new PartitionKey(link.DocumentType));
 
                 var response = req.CreateResponse(HttpStatusCode.OK);
                 await response.WriteAsJsonAsync(new
@@ -140,7 +140,7 @@ namespace DocumentVault.Function.Functions
                 var container = _cosmosClient.GetContainer(_databaseName, _linksContainerName);
                 var link = await container.ReadItemAsync<DocumentLink>(
                     linkId, 
-                    new PartitionKey(linkId)
+                    new PartitionKey("link")
                 );
 
                 if (link.Resource.ExpiresAt < DateTime.UtcNow)
@@ -190,7 +190,7 @@ namespace DocumentVault.Function.Functions
                 const string sprocId = "spDeleteExpiredLinks";
                 while (shouldContinue)
                 {
-                    var response = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>(sprocId, new PartitionKey(string.Empty), null);
+                    var response = await container.Scripts.ExecuteStoredProcedureAsync<dynamic>(sprocId, new PartitionKey("link"), null);
                     dynamic result = response.Resource;
                     
                     totalDeleted += (int)result.deleted;

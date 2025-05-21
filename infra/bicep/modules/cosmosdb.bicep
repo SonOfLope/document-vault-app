@@ -76,7 +76,7 @@ resource linksContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/cont
       id: 'Links'
       partitionKey: {
         paths: [
-          '/id'
+          '/DocumentType'
         ]
         kind: 'Hash'
       }

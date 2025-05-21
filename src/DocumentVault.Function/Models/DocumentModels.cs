@@ -37,5 +37,8 @@ namespace DocumentVault.Function.Models
         public DateTime CreatedAt { get; set; }
         
         public DateTime ExpiresAt { get; set; }
+        
+        [JsonProperty("DocumentType")]
+        public string DocumentType { get; set; } = "link";
     }
 }

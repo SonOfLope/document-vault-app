@@ -16,7 +16,9 @@ with Diagram("Document vault app", show=True, direction="LR"):
         frontdoor = FrontDoors("Front Door & CDN")
 
         user >> Edge(label="accesses") >> web
-        web >> Edge(label="generates download link ") >> func
+        web >> Edge(label="generates download link") >> func
         web >> Edge(label="uploads to") >> blobstorage
-        blobstorage >> Edge(label="stores metadata in") >> cosmosdb
+        func >> Edge(label="manages links in") >> cosmosdb
+        func >> Edge(label="generates SAS tokens for") >> blobstorage
+        web >> Edge(label="reads metadata from") >> cosmosdb
         blobstorage >> Edge(label="served via") >> frontdoor
