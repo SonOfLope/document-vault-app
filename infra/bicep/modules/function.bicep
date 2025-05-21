@@ -128,14 +128,6 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           name: 'AzureFunctionsJobHost__logging__logLevel__default'
           value: 'Information'
         }
-        {
-          name: 'AzureFunctionsJobHost__extensions__http__routePrefix'
-          value: 'api'
-        }
-        {
-          name: 'AzureFunctionsJobHost__extensions__http__dynamicThrottlesEnabled'
-          value: 'true'
-        }
       ]
     }
     httpsOnly: true
