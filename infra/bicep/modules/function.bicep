@@ -16,6 +16,9 @@ param cosmosDbEndpoint string
 @description('Cosmos DB key')
 param cosmosDbKey string
 
+@description('CDN endpoint URL')
+param cdnEndpointUrl string
+
 @description('Location for all resources')
 param location string
 
@@ -27,11 +30,12 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   location: location
   tags: tags
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: 'EP1' // Must use a SKU that supports Linux and dotnet-isolated
+    tier: 'ElasticPremium'
   }
   properties: {
     reserved: true
+    maximumElasticWorkerCount: 20
   }
 }
 
@@ -110,7 +114,7 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'CdnEndpoint'
-          value: replace(replace(storageAccountId, '/storageAccounts/', '.'), 'Microsoft.Storage', 'azureedge.net')
+          value: cdnEndpointUrl
         }
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'

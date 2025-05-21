@@ -69,6 +69,7 @@ module functionApp 'modules/function.bicep' = {
     appInsightsInstrumentationKey: appInsights.outputs.instrumentationKey
     cosmosDbEndpoint: cosmosDb.outputs.endpoint
     cosmosDbKey: listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', cosmosAccountName), '2022-08-15').primaryMasterKey
+    cdnEndpointUrl: cdn.outputs.cdnEndpointUrl
     location: location
     tags: tags
   }
