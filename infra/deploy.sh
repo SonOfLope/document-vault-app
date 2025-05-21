@@ -4,7 +4,7 @@ set -e
 RESOURCE_GROUP_NAME="documentvault-rg"
 LOCATION="eastus"
 ENVIRONMENT="dev"
-GITHUB_REPO_OWNER="SonOfLope"
+GITHUB_REPO_OWNER="SonOfLope" # case sensitive
 GITHUB_REPO_NAME="document-vault-app"
 GITHUB_BRANCH="main"
 CONTAINER_IMAGE_NAME=""
