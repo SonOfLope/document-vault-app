@@ -5,7 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <CompressionEnabled>false</CompressionEnabled>
-    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <!-- Disable static web assets completely during build -->
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
   <ItemGroup>

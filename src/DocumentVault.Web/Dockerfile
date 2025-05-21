@@ -11,7 +11,7 @@ RUN dotnet build "DocumentVault.Web.csproj" -c Release -o /app/build
 
 FROM build AS publish
 
-RUN dotnet publish "DocumentVault.Web.csproj" -c Release -o /app/publish /p:StaticWebAssetBasePath=/ /p:UseAppHost=false
+RUN dotnet publish "DocumentVault.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:StaticWebAssetsEnabled=false
 
 FROM base AS final
 WORKDIR /app
