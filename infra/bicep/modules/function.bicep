@@ -46,9 +46,15 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   properties: {
     serverFarmId: hostingPlan.id
     siteConfig: {
-      linuxFxVersion: 'DOTNET|9.0'
+      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
+      http20Enabled: true
+      cors: {
+        allowedOrigins: [
+          '*'
+        ]
+      }
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
@@ -105,6 +111,30 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
         {
           name: 'CdnEndpoint'
           value: replace(replace(storageAccountId, '/storageAccounts/', '.'), 'Microsoft.Storage', 'azureedge.net')
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: 'InstrumentationKey=${appInsightsInstrumentationKey}'
+        }
+        {
+          name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
+          value: '~2'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
+        {
+          name: 'AzureFunctionsJobHost__logging__logLevel__default'
+          value: 'Information'
+        }
+        {
+          name: 'AzureFunctionsJobHost__extensions__http__routePrefix'
+          value: 'api'
+        }
+        {
+          name: 'AzureFunctionsJobHost__extensions__http__dynamicThrottlesEnabled'
+          value: 'true'
         }
       ]
     }
