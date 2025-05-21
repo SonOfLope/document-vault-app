@@ -2,6 +2,7 @@ using DocumentVault.Web.Services;
 using Microsoft.Azure.Cosmos;
 using Azure.Storage.Blobs;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,10 +37,10 @@ builder.Services.AddSingleton(s =>
     }
     
     // for development, we use the emulator certificate
-    string certPath = Environment.GetEnvironmentVariable("AZURE_COSMOS_EMULATOR_CERTIFICATE_PATH");
+    string? certPath = Environment.GetEnvironmentVariable("AZURE_COSMOS_EMULATOR_CERTIFICATE_PATH");
     if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
     {
-    var expectedCert = new X509Certificate2(certPath);
+    var expectedCert = X509CertificateLoader.LoadCertificateFromFile(certPath);
     var connectionPolicy = new CosmosClientOptions
     {
         ConnectionMode = ConnectionMode.Gateway,
@@ -67,7 +68,7 @@ builder.Services.AddSingleton(s =>
     
     if (isDevelopment && !string.IsNullOrEmpty(builder.Configuration["BlobStorage:ConnectionString"]))
     {
-        connectionString = builder.Configuration["BlobStorage:ConnectionString"];
+        connectionString = builder.Configuration["BlobStorage:ConnectionString"] ?? string.Empty;
     }
     else
     {

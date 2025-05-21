@@ -54,7 +54,6 @@ jobs:
 
     - name: 'Build and push Docker image'
       run: |
-        # Add version to tag using the GitHub run ID to ensure uniqueness
         VERSION=${{ github.run_id }}
         echo "Building version: $VERSION"
         
