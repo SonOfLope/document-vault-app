@@ -73,7 +73,7 @@ namespace DocumentVault.Function.Services
     
     // Query to find expired links
     var now = new Date().toISOString();
-    var query = ""SELECT * FROM c WHERE c.ExpiresAt < '"" + now + ""'"";
+    var query = ""SELECT * FROM c WHERE c.ExpiresAt < GetCurrentDateTime()"";
     
     // Set up the response body
     var responseBody = {
