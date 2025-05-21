@@ -1,5 +1,4 @@
 using DocumentVault.Function.Extensions;
-using Microsoft.Extensions.Logging.ApplicationInsights;
 
 namespace DocumentVault.Function
 {
@@ -8,28 +7,15 @@ namespace DocumentVault.Function
         public static void Main(string[] args)
         {
             var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults(builder =>
-                {
-                    builder.UseDefaultWorkerMiddleware();
-                })
+                .ConfigureFunctionsWorkerDefaults()
                 .ConfigureAppConfiguration(config =>
                 {
                     config.AddEnvironmentVariables();
-                    config.AddJsonFile("host.json", optional: false);
-                })
-                .ConfigureLogging((context, builder) =>
-                {
-                    builder.AddApplicationInsights(
-                        configureTelemetryConfiguration: (config) => 
-                            config.ConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"],
-                        configureApplicationInsightsLoggerOptions: (options) => { }
-                    );
-                    builder.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
+                    config.AddJsonFile("host.json", optional: true);
                 })
                 .ConfigureServices((context, services) =>
                 {
                     services.AddFunctionServices(context.Configuration);
-                    services.AddApplicationInsightsTelemetryWorkerService();
                 })
                 .Build();
 
