@@ -14,7 +14,7 @@ permissions:
 
 env:
   AZURE_CONTAINER_APP_NAME: 'app-docvaultghpctl27yftf6'  # Set this to your container app name
-  REGISTRY_NAME: 'docvaultacrghpctl27yftf6'
+  REGISTRY_NAME: 'acrdocvaultghpctl27yftf6'
   IMAGE_NAME: 'docvault-web'
   DOTNET_VERSION: '9.0'
   RESOURCE_GROUP: 'documentvault-rg'
