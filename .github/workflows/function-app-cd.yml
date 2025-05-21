@@ -13,11 +13,11 @@ permissions:
   contents: read
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'func-docvault'
-  DOTNET_VERSION: '9.0.x'
-  AZURE_TENANT_ID: '70aae3b7-9f3b-484d-8f95-49e8fbb783c0'
-  AZURE_SUBSCRIPTION_ID: 'd42a43c5-a3ff-4b1d-bb49-1d3a4f776848'
-  AZURE_CLIENT_ID: ''                      # Output from functionAppFederatedIdentityClientId
+  AZURE_FUNCTIONAPP_NAME: 'func-docvaultghpctl27yftf6' # set this to your function app name
+  DOTNET_VERSION: '8.0'
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_FA }}
 
 jobs:
   build-and-deploy:

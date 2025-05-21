@@ -37,11 +37,17 @@ using Azure services.
       az login
       ```
 
-2. Deploy the infrastructure:
+2. Deploy the infrastructure for the first time:
 
       ```bash
       cd infra
       ./deploy.sh
+      ```
+
+3. After the first pipeline run, you can use the following command to deploy with container image updates:
+
+      ```bash
+      ./deploy.sh --container-image <container-image>
       ```
 
 ## Local Development

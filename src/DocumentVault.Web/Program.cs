@@ -5,12 +5,10 @@ using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddApplicationInsightsTelemetry();
 
-// Configure CosmosDB client
 builder.Services.AddSingleton(s =>
 {
     var endpoint = builder.Configuration["CosmosDb:Endpoint"];
@@ -61,7 +59,6 @@ builder.Services.AddSingleton(s =>
     return new CosmosClient(endpoint, key);
 });
 
-// Register Blob Storage client
 builder.Services.AddSingleton(s =>
 {
     // For local development we're using Azurite via HTTP
@@ -80,14 +77,12 @@ builder.Services.AddSingleton(s =>
     return new BlobServiceClient(connectionString);
 });
 
-// Register application services
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ILinkService, LinkService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

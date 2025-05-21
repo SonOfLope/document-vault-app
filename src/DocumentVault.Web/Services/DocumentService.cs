@@ -160,7 +160,6 @@ namespace DocumentVault.Web.Services
         {
             var query = new QueryDefinition("SELECT * FROM c WHERE ARRAY_CONTAINS(c.Tags, @tag)").WithParameter("@tag", tags[0]);
             
-            // If more than one tag, use dynamic query construction
             if (tags.Length > 1)
             {
                 var queryText = "SELECT * FROM c WHERE ";

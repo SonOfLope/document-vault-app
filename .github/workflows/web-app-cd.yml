@@ -9,18 +9,18 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write # This is required for OIDC
+  id-token: write
   contents: read
 
 env:
-  AZURE_CONTAINER_APP_NAME: 'app-docvault'  # Set this to your container app name
-  REGISTRY_NAME: 'docvaultacr'              # Set this to your Azure Container Registry name
-  IMAGE_NAME: 'docvault-web'                # Set this to your image name
-  DOTNET_VERSION: '9.0.x'                   # Set this to the .NET version to use
-  RESOURCE_GROUP: 'documentvault-rg'             # Your resource group name
-  AZURE_TENANT_ID: ''                       # Your Azure tenant ID
-  AZURE_SUBSCRIPTION_ID: ''                 # Your Azure subscription ID
-  AZURE_CLIENT_ID: ''                       # Output from webAppFederatedIdentityClientId
+  AZURE_CONTAINER_APP_NAME: 'app-docvaultghpctl27yftf6'  # Set this to your container app name
+  REGISTRY_NAME: 'docvaultacr'
+  IMAGE_NAME: 'docvault-web'
+  DOTNET_VERSION: '9.0'
+  RESOURCE_GROUP: 'documentvault-rg'
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_CA }}
 
 jobs:
   build-and-deploy:
