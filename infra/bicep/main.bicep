@@ -18,8 +18,8 @@ param githubRepositoryName string
 @description('GitHub branch name for the deployments')
 param githubBranch string = 'main'
 
-@description('Container image for web app. If empty, a default public image will be used')
-param containerImageName string = ''
+// @description('Container image for web app. If empty, a default public image will be used')
+// param containerImageName string = ''
 
 var appName = 'docvault'
 var uniqueAppName = '${appName}${uniqueSuffix}'
@@ -75,16 +75,32 @@ module functionApp 'modules/function.bicep' = {
   }
 }
 
-module containerApp 'modules/containerapp.bicep' = {
-  name: 'containerAppDeploy'
+// Commented out for App Service deployment approach
+// module containerApp 'modules/containerapp.bicep' = {
+//   name: 'containerAppDeploy'
+//   params: {
+//     containerAppName: 'app-${uniqueAppName}'
+//     containerAppEnvName: 'env-${uniqueAppName}'
+//     location: location
+//     containerRegistryLoginServer: containerRegistry.outputs.loginServer
+//     containerRegistryUsername: containerRegistry.outputs.adminUsername
+//     containerRegistryPassword: containerRegistry.outputs.adminPassword
+//     containerImageName: containerImageName
+//     appInsightsInstrumentationKey: appInsights.outputs.instrumentationKey
+//     cosmosDbEndpoint: cosmosDb.outputs.endpoint
+//     cosmosDbKey: listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', cosmosAccountName), '2022-08-15').primaryMasterKey
+//     storageAccountName: storageAccount.outputs.name
+//     storageAccountKey: listKeys(resourceId('Microsoft.Storage/storageAccounts', storageAccountName), '2022-09-01').keys[0].value
+//     functionAppHostName: functionApp.outputs.hostName
+//     tags: tags
+//   }
+// }
+
+module appService 'modules/appservice.bicep' = {
+  name: 'appServiceDeploy'
   params: {
-    containerAppName: 'app-${uniqueAppName}'
-    containerAppEnvName: 'env-${uniqueAppName}'
+    appServiceName: 'app-${uniqueAppName}'
     location: location
-    containerRegistryLoginServer: containerRegistry.outputs.loginServer
-    containerRegistryUsername: containerRegistry.outputs.adminUsername
-    containerRegistryPassword: containerRegistry.outputs.adminPassword
-    containerImageName: containerImageName
     appInsightsInstrumentationKey: appInsights.outputs.instrumentationKey
     cosmosDbEndpoint: cosmosDb.outputs.endpoint
     cosmosDbKey: listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', cosmosAccountName), '2022-08-15').primaryMasterKey
@@ -117,7 +133,7 @@ module appInsights 'modules/appinsights.bicep' = {
 output storageAccountName string = storageAccount.outputs.name
 output cosmosDbAccountName string = cosmosDb.outputs.name
 output functionAppName string = functionApp.outputs.name
-output containerAppName string = containerApp.outputs.name
+output appServiceName string = appService.outputs.name
 output cdnEndpointUrl string = cdn.outputs.cdnEndpointUrl
 output appInsightsName string = appInsights.outputs.name
 output containerRegistryName string = containerRegistry.outputs.name
@@ -134,16 +150,39 @@ module functionAppFederatedIdentity 'modules/github-federated-identity.bicep' = 
   }
 }
 
-module webAppFederatedIdentity 'modules/github-federated-identity.bicep' = {
-  name: 'webAppFederatedIdentityDeploy'
+module webAppFederatedIdentityProd 'modules/github-federated-identity.bicep' = {
+  name: 'webAppFederatedIdentityProdDeploy'
   params: {
     repositoryOwner: githubRepositoryOwner
     repositoryName: githubRepositoryName
-    entityType: 'branch'
-    entityName: githubBranch
-    identitySuffix: 'web'
+    entityType: 'environment'
+    entityName: 'prod'
+    identitySuffix: 'web-prod'
   }
 }
+
+module webAppFederatedIdentityTest 'modules/github-federated-identity.bicep' = {
+  name: 'webAppFederatedIdentityTestDeploy'
+  params: {
+    repositoryOwner: githubRepositoryOwner
+    repositoryName: githubRepositoryName
+    entityType: 'environment'
+    entityName: 'test'
+    identitySuffix: 'web-test'
+  }
+}
+
+module webAppFederatedIdentityStaging 'modules/github-federated-identity.bicep' = {
+  name: 'webAppFederatedIdentityStagingDeploy'
+  params: {
+    repositoryOwner: githubRepositoryOwner
+    repositoryName: githubRepositoryName
+    entityType: 'environment'
+    entityName: 'staging'
+    identitySuffix: 'web-staging'
+  }
+}
+
 
 module functionAppRoleAssignment 'modules/role-assignment.bicep' = {
   name: 'functionAppRoleAssignmentDeploy'
@@ -154,23 +193,63 @@ module functionAppRoleAssignment 'modules/role-assignment.bicep' = {
   }
 }
 
-module acrPushRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'acrPushRoleAssignmentDeploy'
+module acrPushRoleAssignmentProd 'modules/role-assignment.bicep' = {
+  name: 'acrPushRoleAssignmentProdDeploy'
   params: {
-    principalId: webAppFederatedIdentity.outputs.federatedIdentityPrincipalId
+    principalId: webAppFederatedIdentityProd.outputs.federatedIdentityPrincipalId
     resourceId: containerRegistry.outputs.id
     roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
   }
 }
 
-module containerAppRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'containerAppRoleAssignmentDeploy'
+module acrPushRoleAssignmentTest 'modules/role-assignment.bicep' = {
+  name: 'acrPushRoleAssignmentTestDeploy'
   params: {
-    principalId: webAppFederatedIdentity.outputs.federatedIdentityPrincipalId
-    resourceId: containerApp.outputs.id
+    principalId: webAppFederatedIdentityTest.outputs.federatedIdentityPrincipalId
+    resourceId: containerRegistry.outputs.id
+    roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
+  }
+}
+
+
+module acrPushRoleAssignmentStaging 'modules/role-assignment.bicep' = {
+  name: 'acrPushRoleAssignmentStagingDeploy'
+  params: {
+    principalId: webAppFederatedIdentityStaging.outputs.federatedIdentityPrincipalId
+    resourceId: containerRegistry.outputs.id
+    roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
+  }
+}
+
+module appServiceRoleAssignmentProd 'modules/role-assignment.bicep' = {
+  name: 'appServiceRoleAssignmentProdDeploy'
+  params: {
+    principalId: webAppFederatedIdentityProd.outputs.federatedIdentityPrincipalId
+    resourceId: appService.outputs.id
+    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+  }
+}
+
+module appServiceRoleAssignmentTest 'modules/role-assignment.bicep' = {
+  name: 'appServiceRoleAssignmentTestDeploy'
+  params: {
+    principalId: webAppFederatedIdentityTest.outputs.federatedIdentityPrincipalId
+    resourceId: appService.outputs.id
+    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+  }
+}
+
+
+module appServiceRoleAssignmentStaging 'modules/role-assignment.bicep' = {
+  name: 'appServiceRoleAssignmentStagingDeploy'
+  params: {
+    principalId: webAppFederatedIdentityStaging.outputs.federatedIdentityPrincipalId
+    resourceId: appService.outputs.id
     roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
   }
 }
 
 output functionAppFederatedIdentityClientId string = functionAppFederatedIdentity.outputs.federatedIdentityClientId
-output webAppFederatedIdentityClientId string = webAppFederatedIdentity.outputs.federatedIdentityClientId
+output webAppFederatedIdentityProdClientId string = webAppFederatedIdentityProd.outputs.federatedIdentityClientId
+output webAppFederatedIdentityTestClientId string = webAppFederatedIdentityTest.outputs.federatedIdentityClientId
+output webAppFederatedIdentityStagingClientId string = webAppFederatedIdentityStaging.outputs.federatedIdentityClientId

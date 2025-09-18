@@ -1,30 +1,33 @@
 name: DocumentVault Web App CD
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'src/DocumentVault.Web/**'
-      - '.github/workflows/web-app-cd.yml'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose the environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - prod
+        - test
+        - staging
 
 permissions:
   id-token: write
   contents: read
 
 env:
-  AZURE_CONTAINER_APP_NAME: 'app-docvaultghpctl27yftf6'  # Set this to your container app name
-  REGISTRY_NAME: 'acrdocvaultghpctl27yftf6'
-  IMAGE_NAME: 'docvault-web'
+  AZURE_APP_SERVICE_NAME: 'app-docvaultdocvault3ftuued3odxl4'
   DOTNET_VERSION: '9.0'
-  RESOURCE_GROUP: 'documentvault-rg'
-  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  RESOURCE_GROUP: 'documentvault-rg-as'
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_CA }}
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     steps:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
@@ -41,38 +44,22 @@ jobs:
         dotnet test --configuration Release --no-build
         popd
 
+    - name: 'Publish application'
+      run: |
+        pushd './src/DocumentVault.Web'
+        dotnet publish --configuration Release --output ./publish
+        popd
+
     - name: 'Azure login using OIDC'
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
-        client-id: ${{ env.AZURE_CLIENT_ID }}
-        tenant-id: ${{ env.AZURE_TENANT_ID }}
-        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID_WEB }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: 'ACR login'
-      run: |
-        az acr login --name ${{ env.REGISTRY_NAME }}
-
-    - name: 'Build and push Docker image'
-      run: |
-        VERSION=${{ github.run_id }}
-        echo "Building version: $VERSION"
-        
-        # Build the Docker image
-        docker build -f ./src/DocumentVault.Web/Dockerfile ./src/DocumentVault.Web -t ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:$VERSION -t ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
-        
-        # Push the image to Azure Container Registry
-        docker push ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:$VERSION
-        docker push ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
-        
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-      id: docker_build
-
-    - name: 'Deploy to Azure Container App'
-      uses: azure/CLI@v1
+    - name: 'Deploy to Azure App Service'
+      uses: azure/webapps-deploy@v2
       with:
-        inlineScript: |
-          VERSION=${{ steps.docker_build.outputs.version }}
-          az containerapp update \
-            --name ${{ env.AZURE_CONTAINER_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:$VERSION
+        app-name: ${{ env.AZURE_APP_SERVICE_NAME }}
+        slot-name: ${{ github.event.inputs.environment }}
+        package: ./src/DocumentVault.Web/publish

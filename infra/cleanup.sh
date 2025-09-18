@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-RESOURCE_GROUP_NAME="documentvault-rg"
+RESOURCE_GROUP_NAME="documentvault-rg-as"
 
 read -p "Are you sure you want to delete all resources in $RESOURCE_GROUP_NAME? (y/n) " -n 1 -r
 echo
