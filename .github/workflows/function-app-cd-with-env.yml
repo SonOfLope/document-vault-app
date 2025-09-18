@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'func-docvaultdocvault3ftuued3odxl4' # set this to your function app name
+  AZURE_FUNCTIONAPP_NAME: 'func-docvault3ftuued3odxl4' # set this to your function app name
   DOTNET_VERSION: '8.0'
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
