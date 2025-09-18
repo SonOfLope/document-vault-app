@@ -1,4 +1,4 @@
-name: DocumentVault Web App CD
+name: DocumentVault Web App CD with env
 
 on:
   workflow_dispatch:
