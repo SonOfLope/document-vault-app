@@ -101,7 +101,6 @@ module cdn 'modules/cdn.bicep' = {
     cdnProfileName: 'cdn-${uniqueAppName}'
     cdnEndpointName: 'endpoint-${uniqueAppName}'
     storageAccountHostName: storageAccount.outputs.primaryBlobEndpoint
-    location: location
     tags: tags
   }
 }
