@@ -6,7 +6,7 @@ ENVIRONMENT="prod"
 RESOURCE_GROUP_NAME="documentvault-rg-as"
 GITHUB_REPO_OWNER="SonOfLope" # case sensitive
 GITHUB_REPO_NAME="document-vault-app"
-GITHUB_BRANCH="main"
+GITHUB_BRANCH="feature/app-service-deployment-with-environments"
 
 while [[ $# -gt 0 ]]; do
   case $1 in

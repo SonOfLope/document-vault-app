@@ -16,7 +16,8 @@ param githubRepositoryOwner string
 param githubRepositoryName string
 
 @description('GitHub branch name for the deployments')
-param githubBranch string = 'main'
+param githubBranch string = 'feature/app-service-deployment-with-environments'
+
 
 // @description('Container image for web app. If empty, a default public image will be used')
 // param containerImageName string = ''

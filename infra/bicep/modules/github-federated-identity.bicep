@@ -16,7 +16,7 @@ param entityType string = 'branch'
 @description('The name of the GitHub entity that can use the federated credential')
 param entityName string = 'main'
 
-var federatedCredentialName = '${repositoryName}-${entityType}-${entityName}'
+var federatedCredentialName = '${repositoryName}-${entityType}-${replace(replace(entityName, '/', '-'), '_', '-')}'
 
 resource federatedIdentityCredentials 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
   name: federatedCredentialName
@@ -40,7 +40,7 @@ resource federatedIdentityCredentials 'Microsoft.ManagedIdentity/userAssignedIde
 param identitySuffix string = 'default'
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-${replace(repositoryName, '-', '')}${entityName}-${identitySuffix}'
+  name: 'id-${replace(repositoryName, '-', '')}${replace(replace(entityName, '/', '-'), '_', '-')}-${identitySuffix}'
   location: resourceGroup().location
 }
 
