@@ -1,4 +1,4 @@
-name: DocumentVault Function App CD
+name: DocumentVault Function App CD with env
 
 on:
   push:
