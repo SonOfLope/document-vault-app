@@ -17,17 +17,17 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AZURE_APP_SERVICE_NAME: 'app-docvaultdocvault3ftuued3odxl4'
-  DOTNET_VERSION: '9.0'
-  RESOURCE_GROUP: 'documentvault-rg-as'
-  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
+    env:
+      AZURE_APP_SERVICE_NAME: 'app-docvault3ftuued3odxl4'
+      DOTNET_VERSION: '9.0'
+      RESOURCE_GROUP: 'documentvault-rg-as'
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     steps:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
