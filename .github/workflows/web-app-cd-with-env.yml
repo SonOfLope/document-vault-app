@@ -57,7 +57,15 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: 'Deploy to Azure App Service'
+    - name: 'Deploy to Azure App Service (Production)'
+      if: ${{ github.event.inputs.environment == 'prod' }}
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_APP_SERVICE_NAME }}
+        package: ./src/DocumentVault.Web/publish
+
+    - name: 'Deploy to Azure App Service (Slot)'
+      if: ${{ github.event.inputs.environment != 'prod' }}
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_APP_SERVICE_NAME }}
