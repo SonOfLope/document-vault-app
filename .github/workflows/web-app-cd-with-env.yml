@@ -1,0 +1,65 @@
+name: DocumentVault Web App CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose the environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - prod
+        - test
+        - staging
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_APP_SERVICE_NAME: 'app-docvaultdocvault3ftuued3odxl4'
+  DOTNET_VERSION: '9.0'
+  RESOURCE_GROUP: 'documentvault-rg-as'
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
+
+    - name: Setup .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 'Build and test'
+      run: |
+        pushd './src/DocumentVault.Web'
+        dotnet build --configuration Release
+        dotnet test --configuration Release --no-build
+        popd
+
+    - name: 'Publish application'
+      run: |
+        pushd './src/DocumentVault.Web'
+        dotnet publish --configuration Release --output ./publish
+        popd
+
+    - name: 'Azure login using OIDC'
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID_WEB }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: 'Deploy to Azure App Service'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_APP_SERVICE_NAME }}
+        slot-name: ${{ github.event.inputs.environment }}
+        package: ./src/DocumentVault.Web/publish
