@@ -10,7 +10,7 @@ on:
     inputs:
       function_app_name:
         description: 'Select the function app to deploy'
-        required: true
+        required: false
         default: 'func-docvaultghpctl27yftf6'
         type: choice
         options:
@@ -23,53 +23,48 @@ permissions:
   contents: read
 
 jobs:
-  resolve:
-    runs-on: ubuntu-latest
-    outputs:
-      var_key: ${{ steps.select.outputs.var_key }}
-    steps:
-      - id: select
-        run: |
-          case "${{ github.event.inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}" in
-            func-docvaultghpctl27yftf6) echo "var_key=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
-            func-docvault3ftuued3odxl4) echo "var_key=AZURE_CLIENT_ID_ENV_SLOTS" >> "$GITHUB_OUTPUT" ;;
-            func-docvaultefgaj2t73so3m) echo "var_key=AZURE_CLIENT_ID_DEPLOYMENT_CENTER" >> "$GITHUB_OUTPUT" ;;
-          esac
-
   build-and-deploy:
-    needs: resolve
     runs-on: ubuntu-latest
     env:
-      AZURE_FUNCTIONAPP_NAME: ${{ github.event.inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}
       DOTNET_VERSION: '8.0'
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_CLIENT_ID: ${{ vars[needs.resolve.outputs.var_key] }}
+      DEFAULT_APP: func-docvaultghpctl27yftf6
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET ${{ env.DOTNET_VERSION }}
-        uses: actions/setup-dotnet@v3
+      - id: select
+        shell: bash
+        run: |
+          SELECTED="${{ github.event.inputs.function_app_name }}"
+          if [ -z "$SELECTED" ]; then
+            SELECTED="${DEFAULT_APP}"
+          fi
+          echo "app_name=$SELECTED" >> "$GITHUB_OUTPUT"
+          case "$SELECTED" in
+            func-docvaultghpctl27yftf6) echo "client_id=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
+            func-docvault3ftuued3odxl4) echo "client_id=AZURE_CLIENT_ID_ENV_SLOTS" >> "$GITHUB_OUTPUT" ;;
+            func-docvaultefgaj2t73so3m) echo "client_id=AZURE_CLIENT_ID_DEPLOYMENT_CENTER" >> "$GITHUB_OUTPUT" ;;
+            *) echo "client_id=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build function app
-        run: |
+      - run: |
           pushd './src/DocumentVault.Function'
           dotnet build --configuration Release
           dotnet publish --configuration Release --output ./output
           popd
 
-      - name: Azure login using OIDC
-        uses: azure/login@v1
+      - uses: azure/login@v1
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets[steps.select.outputs.client_id] }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v1
+      - uses: Azure/functions-action@v1
         with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          app-name: ${{ steps.select.outputs.app_name }}
           package: './src/DocumentVault.Function/output'
