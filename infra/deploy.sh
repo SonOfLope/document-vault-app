@@ -71,6 +71,12 @@ az deployment group create \
 
 echo "Getting deployment information..."
 
+FUNC_APP_CLIENT_ID=$(az deployment group show \
+  --resource-group $RESOURCE_GROUP_NAME \
+  --name $DEPLOYMENT_NAME \
+  --query "properties.outputs.functionAppFederatedIdentityClientId.value" \
+  --output tsv)
+
 APP_SERVICE_NAME=$(az deployment group show \
   --resource-group $RESOURCE_GROUP_NAME \
   --name $DEPLOYMENT_NAME \
@@ -82,18 +88,24 @@ echo "Azure Deployment Center has been configured for automatic CI/CD."
 echo
 echo "App Service Name: $APP_SERVICE_NAME"
 echo "GitHub Repository: https://github.com/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME"
-echo "Branch: $GITHUB_BRANCH"
+echo
+echo "Slot-specific branches:"
+echo "- Production slot: $GITHUB_BRANCH"
+echo "- Staging slot: $GITHUB_BRANCH-staging"
+echo "- Test slot: $GITHUB_BRANCH-test"
 echo
 echo "Deployment center will automatically:"
-echo "1. Generate a GitHub Actions workflow in your repository"
-echo "2. Create a service principal for authentication"
-echo "3. Deploy to production slot when you push to $GITHUB_BRANCH"
-echo "4. Provide test and staging slots for manual deployment/swapping"
+echo "1. Generate GitHub Actions workflows for each slot"
+echo "2. Create service principals for authentication"
+echo "3. Deploy to respective slots when you push to their branches"
 echo
-echo "Available slots:"
+echo "Available endpoints:"
 echo "- Production: https://$APP_SERVICE_NAME.azurewebsites.net"
 echo "- Staging: https://$APP_SERVICE_NAME-staging.azurewebsites.net"
 echo "- Test: https://$APP_SERVICE_NAME-test.azurewebsites.net"
 echo
-echo "Use Azure Portal to manage slot swapping and deployments."
+echo "For Function App (uses federated identity):"
+echo "AZURE_TENANT_ID: $(az account show --query tenantId -o tsv)"
+echo "AZURE_SUBSCRIPTION_ID: $(az account show --query id -o tsv)"
+echo "AZURE_CLIENT_ID_FA_DEPLOYMENT_CENTER: $FUNC_APP_CLIENT_ID"
 echo "================================================"

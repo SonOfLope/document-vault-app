@@ -142,18 +142,17 @@ output appInsightsName string = appInsights.outputs.name
 output containerRegistryName string = containerRegistry.outputs.name
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 
-// Commented out federated identity modules for deployment center approach
-// Deployment center will handle GitHub integration automatically
-// module functionAppFederatedIdentity 'modules/github-federated-identity.bicep' = {
-//   name: 'functionAppFederatedIdentityDeploy'
-//   params: {
-//     repositoryOwner: githubRepositoryOwner
-//     repositoryName: githubRepositoryName
-//     entityType: 'branch'
-//     entityName: githubBranch
-//     identitySuffix: 'function'
-//   }
-// }
+// Function App still needs federated identity (not using deployment center)
+module functionAppFederatedIdentity 'modules/github-federated-identity.bicep' = {
+  name: 'functionAppFederatedIdentityDeploy'
+  params: {
+    repositoryOwner: githubRepositoryOwner
+    repositoryName: githubRepositoryName
+    entityType: 'branch'
+    entityName: githubBranch
+    identitySuffix: 'function'
+  }
+}
 
 // module webAppFederatedIdentityProd 'modules/github-federated-identity.bicep' = {
 //   name: 'webAppFederatedIdentityProdDeploy'
@@ -188,14 +187,14 @@ output containerRegistryLoginServer string = containerRegistry.outputs.loginServ
 //   }
 // }
 
-// module functionAppRoleAssignment 'modules/role-assignment.bicep' = {
-//   name: 'functionAppRoleAssignmentDeploy'
-//   params: {
-//     principalId: functionAppFederatedIdentity.outputs.federatedIdentityPrincipalId
-//     resourceId: functionApp.outputs.id
-//     roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
-//   }
-// }
+module functionAppRoleAssignment 'modules/role-assignment.bicep' = {
+  name: 'functionAppRoleAssignmentDeploy'
+  params: {
+    principalId: functionAppFederatedIdentity.outputs.federatedIdentityPrincipalId
+    resourceId: functionApp.outputs.id
+    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+  }
+}
 
 // module acrPushRoleAssignmentProd 'modules/role-assignment.bicep' = {
 //   name: 'acrPushRoleAssignmentProdDeploy'
@@ -251,8 +250,10 @@ output containerRegistryLoginServer string = containerRegistry.outputs.loginServ
 //   }
 // }
 
-// Commented out federated identity outputs for deployment center approach
-// output functionAppFederatedIdentityClientId string = functionAppFederatedIdentity.outputs.federatedIdentityClientId
+// Function App federated identity output (still needed for GitHub Actions)
+output functionAppFederatedIdentityClientId string = functionAppFederatedIdentity.outputs.federatedIdentityClientId
+
+// Web App federated identities not needed - deployment center handles authentication
 // output webAppFederatedIdentityProdClientId string = webAppFederatedIdentityProd.outputs.federatedIdentityClientId
 // output webAppFederatedIdentityTestClientId string = webAppFederatedIdentityTest.outputs.federatedIdentityClientId
 // output webAppFederatedIdentityStagingClientId string = webAppFederatedIdentityStaging.outputs.federatedIdentityClientId

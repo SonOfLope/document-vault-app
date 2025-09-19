@@ -248,13 +248,55 @@ resource stagingSlot 'Microsoft.Web/sites/slots@2022-03-01' = {
   }
 }
 
-// Configure deployment center for main production slot
+// Configure deployment center for production slot
 resource sourceControlConfig 'Microsoft.Web/sites/sourcecontrols@2022-03-01' = {
   name: 'web'
   parent: appService
   properties: {
     repoUrl: githubRepositoryUrl
     branch: githubBranch
+    isManualIntegration: false
+    isGitHubAction: true
+    gitHubActionConfiguration: {
+      codeConfiguration: {
+        runtimeStack: 'dotnetcore'
+        runtimeVersion: '9.0'
+      }
+      containerConfiguration: null
+      isLinux: true
+      generateWorkflowFile: true
+    }
+  }
+}
+
+// Configure deployment center for staging slot
+resource stagingSourceControlConfig 'Microsoft.Web/sites/slots/sourcecontrols@2022-03-01' = {
+  name: 'web'
+  parent: stagingSlot
+  properties: {
+    repoUrl: githubRepositoryUrl
+    branch: '${githubBranch}-staging'
+    isManualIntegration: false
+    isGitHubAction: true
+    gitHubActionConfiguration: {
+      codeConfiguration: {
+        runtimeStack: 'dotnetcore'
+        runtimeVersion: '9.0'
+      }
+      containerConfiguration: null
+      isLinux: true
+      generateWorkflowFile: true
+    }
+  }
+}
+
+// Configure deployment center for test slot
+resource testSourceControlConfig 'Microsoft.Web/sites/slots/sourcecontrols@2022-03-01' = {
+  name: 'web'
+  parent: testSlot
+  properties: {
+    repoUrl: githubRepositoryUrl
+    branch: '${githubBranch}-test'
     isManualIntegration: false
     isGitHubAction: true
     gitHubActionConfiguration: {
