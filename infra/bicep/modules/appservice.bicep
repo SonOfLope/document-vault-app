@@ -26,6 +26,11 @@ param location string
 @description('Tags for the resources')
 param tags object
 
+@description('GitHub repository URL for deployment center')
+param githubRepositoryUrl string
+
+@description('GitHub branch name for deployment center')
+param githubBranch string = 'feature/app-service-deployment-with-deployment-center'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: '${appServiceName}-plan'
@@ -240,6 +245,27 @@ resource stagingSlot 'Microsoft.Web/sites/slots@2022-03-01' = {
       ]
     }
     httpsOnly: true
+  }
+}
+
+// Configure deployment center for main production slot
+resource sourceControlConfig 'Microsoft.Web/sites/sourcecontrols@2022-03-01' = {
+  name: 'web'
+  parent: appService
+  properties: {
+    repoUrl: githubRepositoryUrl
+    branch: githubBranch
+    isManualIntegration: false
+    isGitHubAction: true
+    gitHubActionConfiguration: {
+      codeConfiguration: {
+        runtimeStack: 'dotnetcore'
+        runtimeVersion: '9.0'
+      }
+      containerConfiguration: null
+      isLinux: true
+      generateWorkflowFile: true
+    }
   }
 }
 

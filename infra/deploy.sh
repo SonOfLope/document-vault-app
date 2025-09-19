@@ -3,10 +3,10 @@ set -e
 
 LOCATION="eastus"
 ENVIRONMENT="prod"
-RESOURCE_GROUP_NAME="documentvault-rg-as"
+RESOURCE_GROUP_NAME="documentvault-rg-as-dc"
 GITHUB_REPO_OWNER="SonOfLope" # case sensitive
 GITHUB_REPO_NAME="document-vault-app"
-GITHUB_BRANCH="feature/app-service-deployment-with-environments"
+GITHUB_BRANCH="feature/app-service-deployment-with-deployment-center"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -69,30 +69,7 @@ az deployment group create \
   --name $DEPLOYMENT_NAME \
   --verbose
 
-echo "Getting federated identity client IDs for GitHub Actions..."
-FUNC_APP_CLIENT_ID=$(az deployment group show \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --name $DEPLOYMENT_NAME \
-  --query "properties.outputs.functionAppFederatedIdentityClientId.value" \
-  --output tsv)
-
-WEB_APP_PROD_CLIENT_ID=$(az deployment group show \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --name $DEPLOYMENT_NAME \
-  --query "properties.outputs.webAppFederatedIdentityProdClientId.value" \
-  --output tsv)
-
-WEB_APP_TEST_CLIENT_ID=$(az deployment group show \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --name $DEPLOYMENT_NAME \
-  --query "properties.outputs.webAppFederatedIdentityTestClientId.value" \
-  --output tsv)
-
-WEB_APP_STAGING_CLIENT_ID=$(az deployment group show \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --name $DEPLOYMENT_NAME \
-  --query "properties.outputs.webAppFederatedIdentityStagingClientId.value" \
-  --output tsv)
+echo "Getting deployment information..."
 
 APP_SERVICE_NAME=$(az deployment group show \
   --resource-group $RESOURCE_GROUP_NAME \
@@ -100,21 +77,23 @@ APP_SERVICE_NAME=$(az deployment group show \
   --query "properties.outputs.appServiceName.value" \
   --output tsv)
 
-echo "======= GITHUB ACTIONS CONFIGURATION ======="
-echo "Update your GitHub Actions workflows with the following values:"
+echo "======= DEPLOYMENT CENTER CONFIGURATION ======="
+echo "Azure Deployment Center has been configured for automatic CI/CD."
 echo
-echo "For Function App Workflow (.github/workflows/function-app-cd.yml):"
-echo "AZURE_TENANT_ID: $(az account show --query tenantId -o tsv)"
-echo "AZURE_SUBSCRIPTION_ID: $(az account show --query id -o tsv)"
-echo "AZURE_CLIENT_ID: $FUNC_APP_CLIENT_ID"
+echo "App Service Name: $APP_SERVICE_NAME"
+echo "GitHub Repository: https://github.com/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME"
+echo "Branch: $GITHUB_BRANCH"
 echo
-echo "For Web App Workflow (.github/workflows/web-app-cd.yml):"
-echo "AZURE_APP_SERVICE_NAME: $APP_SERVICE_NAME"
-echo "AZURE_TENANT_ID: $(az account show --query tenantId -o tsv)"
-echo "AZURE_SUBSCRIPTION_ID: $(az account show --query id -o tsv)"
+echo "Deployment center will automatically:"
+echo "1. Generate a GitHub Actions workflow in your repository"
+echo "2. Create a service principal for authentication"
+echo "3. Deploy to production slot when you push to $GITHUB_BRANCH"
+echo "4. Provide test and staging slots for manual deployment/swapping"
 echo
-echo "GitHub Environment Secrets (set AZURE_CLIENT_ID_WEB for each environment):"
-echo "prod environment: $WEB_APP_PROD_CLIENT_ID"
-echo "test environment: $WEB_APP_TEST_CLIENT_ID"
-echo "staging environment: $WEB_APP_STAGING_CLIENT_ID"
+echo "Available slots:"
+echo "- Production: https://$APP_SERVICE_NAME.azurewebsites.net"
+echo "- Staging: https://$APP_SERVICE_NAME-staging.azurewebsites.net"
+echo "- Test: https://$APP_SERVICE_NAME-test.azurewebsites.net"
+echo
+echo "Use Azure Portal to manage slot swapping and deployments."
 echo "================================================"

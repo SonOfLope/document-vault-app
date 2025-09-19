@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
-@description('The environment name (dev, test, prod)')
-param environmentName string = 'dev'
+@description('The environment name (staging, test, prod)')
+param environmentName string = 'staging'
 
 @description('The Azure region for resources')
 param location string = resourceGroup().location
@@ -16,7 +16,7 @@ param githubRepositoryOwner string
 param githubRepositoryName string
 
 @description('GitHub branch name for the deployments')
-param githubBranch string = 'feature/app-service-deployment-with-environments'
+param githubBranch string = 'feature/app-service-deployment-with-deployment-center'
 
 
 // @description('Container image for web app. If empty, a default public image will be used')
@@ -108,6 +108,8 @@ module appService 'modules/appservice.bicep' = {
     storageAccountName: storageAccount.outputs.name
     storageAccountKey: listKeys(resourceId('Microsoft.Storage/storageAccounts', storageAccountName), '2022-09-01').keys[0].value
     functionAppHostName: functionApp.outputs.hostName
+    githubRepositoryUrl: 'https://github.com/${githubRepositoryOwner}/${githubRepositoryName}'
+    githubBranch: githubBranch
     tags: tags
   }
 }
@@ -140,117 +142,117 @@ output appInsightsName string = appInsights.outputs.name
 output containerRegistryName string = containerRegistry.outputs.name
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 
-module functionAppFederatedIdentity 'modules/github-federated-identity.bicep' = {
-  name: 'functionAppFederatedIdentityDeploy'
-  params: {
-    repositoryOwner: githubRepositoryOwner
-    repositoryName: githubRepositoryName
-    entityType: 'branch'
-    entityName: githubBranch
-    identitySuffix: 'function'
-  }
-}
+// Commented out federated identity modules for deployment center approach
+// Deployment center will handle GitHub integration automatically
+// module functionAppFederatedIdentity 'modules/github-federated-identity.bicep' = {
+//   name: 'functionAppFederatedIdentityDeploy'
+//   params: {
+//     repositoryOwner: githubRepositoryOwner
+//     repositoryName: githubRepositoryName
+//     entityType: 'branch'
+//     entityName: githubBranch
+//     identitySuffix: 'function'
+//   }
+// }
 
-module webAppFederatedIdentityProd 'modules/github-federated-identity.bicep' = {
-  name: 'webAppFederatedIdentityProdDeploy'
-  params: {
-    repositoryOwner: githubRepositoryOwner
-    repositoryName: githubRepositoryName
-    entityType: 'environment'
-    entityName: 'prod'
-    identitySuffix: 'web-prod'
-  }
-}
+// module webAppFederatedIdentityProd 'modules/github-federated-identity.bicep' = {
+//   name: 'webAppFederatedIdentityProdDeploy'
+//   params: {
+//     repositoryOwner: githubRepositoryOwner
+//     repositoryName: githubRepositoryName
+//     entityType: 'environment'
+//     entityName: 'prod'
+//     identitySuffix: 'web-prod'
+//   }
+// }
 
-module webAppFederatedIdentityTest 'modules/github-federated-identity.bicep' = {
-  name: 'webAppFederatedIdentityTestDeploy'
-  params: {
-    repositoryOwner: githubRepositoryOwner
-    repositoryName: githubRepositoryName
-    entityType: 'environment'
-    entityName: 'test'
-    identitySuffix: 'web-test'
-  }
-}
+// module webAppFederatedIdentityTest 'modules/github-federated-identity.bicep' = {
+//   name: 'webAppFederatedIdentityTestDeploy'
+//   params: {
+//     repositoryOwner: githubRepositoryOwner
+//     repositoryName: githubRepositoryName
+//     entityType: 'environment'
+//     entityName: 'test'
+//     identitySuffix: 'web-test'
+//   }
+// }
 
-module webAppFederatedIdentityStaging 'modules/github-federated-identity.bicep' = {
-  name: 'webAppFederatedIdentityStagingDeploy'
-  params: {
-    repositoryOwner: githubRepositoryOwner
-    repositoryName: githubRepositoryName
-    entityType: 'environment'
-    entityName: 'staging'
-    identitySuffix: 'web-staging'
-  }
-}
+// module webAppFederatedIdentityStaging 'modules/github-federated-identity.bicep' = {
+//   name: 'webAppFederatedIdentityStagingDeploy'
+//   params: {
+//     repositoryOwner: githubRepositoryOwner
+//     repositoryName: githubRepositoryName
+//     entityType: 'environment'
+//     entityName: 'staging'
+//     identitySuffix: 'web-staging'
+//   }
+// }
 
+// module functionAppRoleAssignment 'modules/role-assignment.bicep' = {
+//   name: 'functionAppRoleAssignmentDeploy'
+//   params: {
+//     principalId: functionAppFederatedIdentity.outputs.federatedIdentityPrincipalId
+//     resourceId: functionApp.outputs.id
+//     roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+//   }
+// }
 
-module functionAppRoleAssignment 'modules/role-assignment.bicep' = {
-  name: 'functionAppRoleAssignmentDeploy'
-  params: {
-    principalId: functionAppFederatedIdentity.outputs.federatedIdentityPrincipalId
-    resourceId: functionApp.outputs.id
-    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
-  }
-}
+// module acrPushRoleAssignmentProd 'modules/role-assignment.bicep' = {
+//   name: 'acrPushRoleAssignmentProdDeploy'
+//   params: {
+//     principalId: webAppFederatedIdentityProd.outputs.federatedIdentityPrincipalId
+//     resourceId: containerRegistry.outputs.id
+//     roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
+//   }
+// }
 
-module acrPushRoleAssignmentProd 'modules/role-assignment.bicep' = {
-  name: 'acrPushRoleAssignmentProdDeploy'
-  params: {
-    principalId: webAppFederatedIdentityProd.outputs.federatedIdentityPrincipalId
-    resourceId: containerRegistry.outputs.id
-    roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
-  }
-}
+// module acrPushRoleAssignmentTest 'modules/role-assignment.bicep' = {
+//   name: 'acrPushRoleAssignmentTestDeploy'
+//   params: {
+//     principalId: webAppFederatedIdentityTest.outputs.federatedIdentityPrincipalId
+//     resourceId: containerRegistry.outputs.id
+//     roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
+//   }
+// }
 
-module acrPushRoleAssignmentTest 'modules/role-assignment.bicep' = {
-  name: 'acrPushRoleAssignmentTestDeploy'
-  params: {
-    principalId: webAppFederatedIdentityTest.outputs.federatedIdentityPrincipalId
-    resourceId: containerRegistry.outputs.id
-    roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
-  }
-}
+// module acrPushRoleAssignmentStaging 'modules/role-assignment.bicep' = {
+//   name: 'acrPushRoleAssignmentStagingDeploy'
+//   params: {
+//     principalId: webAppFederatedIdentityStaging.outputs.federatedIdentityPrincipalId
+//     resourceId: containerRegistry.outputs.id
+//     roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
+//   }
+// }
 
+// module appServiceRoleAssignmentProd 'modules/role-assignment.bicep' = {
+//   name: 'appServiceRoleAssignmentProdDeploy'
+//   params: {
+//     principalId: webAppFederatedIdentityProd.outputs.federatedIdentityPrincipalId
+//     resourceId: appService.outputs.id
+//     roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+//   }
+// }
 
-module acrPushRoleAssignmentStaging 'modules/role-assignment.bicep' = {
-  name: 'acrPushRoleAssignmentStagingDeploy'
-  params: {
-    principalId: webAppFederatedIdentityStaging.outputs.federatedIdentityPrincipalId
-    resourceId: containerRegistry.outputs.id
-    roleDefinitionId: '8311e382-0749-4cb8-b61a-304f252e45ec' // AcrPush role
-  }
-}
+// module appServiceRoleAssignmentTest 'modules/role-assignment.bicep' = {
+//   name: 'appServiceRoleAssignmentTestDeploy'
+//   params: {
+//     principalId: webAppFederatedIdentityTest.outputs.federatedIdentityPrincipalId
+//     resourceId: appService.outputs.id
+//     roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+//   }
+// }
 
-module appServiceRoleAssignmentProd 'modules/role-assignment.bicep' = {
-  name: 'appServiceRoleAssignmentProdDeploy'
-  params: {
-    principalId: webAppFederatedIdentityProd.outputs.federatedIdentityPrincipalId
-    resourceId: appService.outputs.id
-    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
-  }
-}
+// module appServiceRoleAssignmentStaging 'modules/role-assignment.bicep' = {
+//   name: 'appServiceRoleAssignmentStagingDeploy'
+//   params: {
+//     principalId: webAppFederatedIdentityStaging.outputs.federatedIdentityPrincipalId
+//     resourceId: appService.outputs.id
+//     roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
+//   }
+// }
 
-module appServiceRoleAssignmentTest 'modules/role-assignment.bicep' = {
-  name: 'appServiceRoleAssignmentTestDeploy'
-  params: {
-    principalId: webAppFederatedIdentityTest.outputs.federatedIdentityPrincipalId
-    resourceId: appService.outputs.id
-    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
-  }
-}
-
-
-module appServiceRoleAssignmentStaging 'modules/role-assignment.bicep' = {
-  name: 'appServiceRoleAssignmentStagingDeploy'
-  params: {
-    principalId: webAppFederatedIdentityStaging.outputs.federatedIdentityPrincipalId
-    resourceId: appService.outputs.id
-    roleDefinitionId: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
-  }
-}
-
-output functionAppFederatedIdentityClientId string = functionAppFederatedIdentity.outputs.federatedIdentityClientId
-output webAppFederatedIdentityProdClientId string = webAppFederatedIdentityProd.outputs.federatedIdentityClientId
-output webAppFederatedIdentityTestClientId string = webAppFederatedIdentityTest.outputs.federatedIdentityClientId
-output webAppFederatedIdentityStagingClientId string = webAppFederatedIdentityStaging.outputs.federatedIdentityClientId
+// Commented out federated identity outputs for deployment center approach
+// output functionAppFederatedIdentityClientId string = functionAppFederatedIdentity.outputs.federatedIdentityClientId
+// output webAppFederatedIdentityProdClientId string = webAppFederatedIdentityProd.outputs.federatedIdentityClientId
+// output webAppFederatedIdentityTestClientId string = webAppFederatedIdentityTest.outputs.federatedIdentityClientId
+// output webAppFederatedIdentityStagingClientId string = webAppFederatedIdentityStaging.outputs.federatedIdentityClientId
