@@ -29,24 +29,9 @@ jobs:
       DOTNET_VERSION: '8.0'
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      DEFAULT_APP: func-docvaultghpctl27yftf6
+      SELECTED_APP: ${{ github.event.inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}
     steps:
       - uses: actions/checkout@v4
-
-      - id: select
-        shell: bash
-        run: |
-          SELECTED="${{ github.event.inputs.function_app_name }}"
-          if [ -z "$SELECTED" ]; then
-            SELECTED="${DEFAULT_APP}"
-          fi
-          echo "app_name=$SELECTED" >> "$GITHUB_OUTPUT"
-          case "$SELECTED" in
-            func-docvaultghpctl27yftf6) echo "client_id=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
-            func-docvault3ftuued3odxl4) echo "client_id=AZURE_CLIENT_ID_ENV_SLOTS" >> "$GITHUB_OUTPUT" ;;
-            func-docvaultefgaj2t73so3m) echo "client_id=AZURE_CLIENT_ID_DEPLOYMENT_CENTER" >> "$GITHUB_OUTPUT" ;;
-            *) echo "client_id=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
-          esac
 
       - uses: actions/setup-dotnet@v3
         with:
@@ -58,13 +43,47 @@ jobs:
           dotnet publish --configuration Release --output ./output
           popd
 
-      - uses: azure/login@v1
+      - name: Login (func-docvaultghpctl27yftf6)
+        if: env.SELECTED_APP == 'func-docvaultghpctl27yftf6'
+        uses: azure/login@v1
         with:
-          client-id: ${{ secrets[steps.select.outputs.client_id] }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_FA_BRANCH }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: Azure/functions-action@v1
+      - name: Deploy (func-docvaultghpctl27yftf6)
+        if: env.SELECTED_APP == 'func-docvaultghpctl27yftf6'
+        uses: Azure/functions-action@v1
         with:
-          app-name: ${{ steps.select.outputs.app_name }}
+          app-name: func-docvaultghpctl27yftf6
+          package: './src/DocumentVault.Function/output'
+
+      - name: Login (func-docvault3ftuued3odxl4)
+        if: env.SELECTED_APP == 'func-docvault3ftuued3odxl4'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ENV_SLOTS }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy (func-docvault3ftuued3odxl4)
+        if: env.SELECTED_APP == 'func-docvault3ftuued3odxl4'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: func-docvault3ftuued3odxl4
+          package: './src/DocumentVault.Function/output'
+
+      - name: Login (func-docvaultefgaj2t73so3m)
+        if: env.SELECTED_APP == 'func-docvaultefgaj2t73so3m'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_DEPLOYMENT_CENTER }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy (func-docvaultefgaj2t73so3m)
+        if: env.SELECTED_APP == 'func-docvaultefgaj2t73so3m'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: func-docvaultefgaj2t73so3m
           package: './src/DocumentVault.Function/output'
