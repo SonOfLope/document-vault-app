@@ -1,4 +1,4 @@
-name: DocumentVault Function App CD
+name: DocumentVault Function App CD with env
 
 on:
   push:
@@ -7,46 +7,81 @@ on:
       - 'src/DocumentVault.Function/**'
       - '.github/workflows/function-app-cd.yml'
   workflow_dispatch:
+    inputs:
+      function_app_name:
+        description: 'Select the function app to deploy'
+        required: true
+        default: 'func-docvaultghpctl27yftf6'
+        type: choice
+        options:
+          - func-docvaultghpctl27yftf6
+          - func-docvault3ftuued3odxl4
+          - func-docvaultefgaj2t73so3m
 
 permissions:
   id-token: write
   contents: read
 
-env:
-  AZURE_FUNCTIONAPP_NAME: 'func-docvaultghpctl27yftf6' # set this to your function app name
-  DOTNET_VERSION: '8.0'
-  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_FA }}
-
 jobs:
-  build-and-deploy:
+  resolve:
     runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.select.outputs.app_name }}
+      client_id: ${{ steps.select.outputs.client_id }}
     steps:
-    - name: 'Checkout GitHub Action'
-      uses: actions/checkout@v4
+      - id: select
+        env:
+          SELECTED_APP: ${{ inputs.function_app_name != '' && inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}
+        run: |
+          case "$SELECTED_APP" in
+            func-docvaultghpctl27yftf6)
+              echo "app_name=func-docvaultghpctl27yftf6" >> "$GITHUB_OUTPUT"
+              echo "client_id=${{ secrets.AZURE_CLIENT_ID_FA_BRANCH }}" >> "$GITHUB_OUTPUT"
+              ;;
+            func-docvault3ftuued3odxl4)
+              echo "app_name=func-docvault3ftuued3odxl4" >> "$GITHUB_OUTPUT"
+              echo "client_id=${{ secrets.AZURE_CLIENT_ID_FA_ENV }}" >> "$GITHUB_OUTPUT"
+              ;;
+            func-docvaultefgaj2t73so3m)
+              echo "app_name=func-docvaultefgaj2t73so3m" >> "$GITHUB_OUTPUT"
+              echo "client_id=${{ secrets.AZURE_CLIENT_ID_FA_DEPLOYMENT_CENTER }}" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
 
-    - name: Setup .NET ${{ env.DOTNET_VERSION }}
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+  build-and-deploy:
+    needs: resolve
+    runs-on: ubuntu-latest
+    env:
+      AZURE_FUNCTIONAPP_NAME: ${{ needs.resolve.outputs.app_name }}
+      DOTNET_VERSION: '8.0'
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ needs.resolve.outputs.client_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Build function app
-      run: |
-        pushd './src/DocumentVault.Function'
-        dotnet build --configuration Release
-        dotnet publish --configuration Release --output ./output
-        popd
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: 'Azure login using OIDC'
-      uses: azure/login@v1
-      with:
-        client-id: ${{ env.AZURE_CLIENT_ID }}
-        tenant-id: ${{ env.AZURE_TENANT_ID }}
-        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - name: Build function app
+        run: |
+          pushd './src/DocumentVault.Function'
+          dotnet build --configuration Release
+          dotnet publish --configuration Release --output ./output
+          popd
 
-    - name: 'Deploy to Azure Functions'
-      uses: Azure/functions-action@v1
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: './src/DocumentVault.Function/output'
+      - name: Azure login using OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: './src/DocumentVault.Function/output'
