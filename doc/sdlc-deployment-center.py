@@ -26,7 +26,7 @@ def create_diagram():
             github_repo = Github("Repository")
 
         with Cluster("Pipelines"):
-            web_pipeline = GithubActions("web-app-cd-with-env.yml")
+            web_pipeline = GithubActions("Deployment center auto provisioned yaml workflow")
             function_pipeline = GithubActions("function-app-cd.yml")
 
         with Cluster("Azure tenant"):
@@ -52,7 +52,7 @@ def create_diagram():
         web >> Edge(label="code & commit") >> github_repo
         function >> Edge(label="code & commit") >> github_repo
 
-        github_repo >> Edge(label="manual trigger, select environment") >> web_pipeline
+        github_repo >> Edge(label="push to target branch") >> web_pipeline
         github_repo >> Edge(label="manual trigger") >> function_pipeline
 
         web_pipeline >> Edge(label="push via Deployment Center") >> [prod_dc, staging_dc, test_dc]

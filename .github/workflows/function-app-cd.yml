@@ -26,26 +26,14 @@ jobs:
   resolve:
     runs-on: ubuntu-latest
     outputs:
-      app_name: ${{ steps.select.outputs.app_name }}
-      client_id: ${{ steps.select.outputs.client_id }}
+      var_key: ${{ steps.select.outputs.var_key }}
     steps:
       - id: select
-        env:
-          SELECTED_APP: ${{ inputs.function_app_name != '' && inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}
         run: |
-          case "$SELECTED_APP" in
-            func-docvaultghpctl27yftf6)
-              echo "app_name=func-docvaultghpctl27yftf6" >> "$GITHUB_OUTPUT"
-              echo "client_id=${{ secrets.AZURE_CLIENT_ID_FA_BRANCH }}" >> "$GITHUB_OUTPUT"
-              ;;
-            func-docvault3ftuued3odxl4)
-              echo "app_name=func-docvault3ftuued3odxl4" >> "$GITHUB_OUTPUT"
-              echo "client_id=${{ secrets.AZURE_CLIENT_ID_FA_ENV }}" >> "$GITHUB_OUTPUT"
-              ;;
-            func-docvaultefgaj2t73so3m)
-              echo "app_name=func-docvaultefgaj2t73so3m" >> "$GITHUB_OUTPUT"
-              echo "client_id=${{ secrets.AZURE_CLIENT_ID_FA_DEPLOYMENT_CENTER }}" >> "$GITHUB_OUTPUT"
-              ;;
+          case "${{ github.event.inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}" in
+            func-docvaultghpctl27yftf6) echo "var_key=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
+            func-docvault3ftuued3odxl4) echo "var_key=AZURE_CLIENT_ID_ENV_SLOTS" >> "$GITHUB_OUTPUT" ;;
+            func-docvaultefgaj2t73so3m) echo "var_key=AZURE_CLIENT_ID_DEPLOYMENT_CENTER" >> "$GITHUB_OUTPUT" ;;
           esac
 
   build-and-deploy:
@@ -56,7 +44,7 @@ jobs:
       DOTNET_VERSION: '8.0'
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      AZURE_CLIENT_ID: ${{ needs.resolve.outputs.client_id }}
+      AZURE_CLIENT_ID: ${{ vars[needs.resolve.outputs.var_key] }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

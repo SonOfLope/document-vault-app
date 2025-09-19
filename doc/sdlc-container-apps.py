@@ -7,18 +7,17 @@ Generates a visual diagram showing the software development lifecycle for Contai
 from diagrams import Diagram, Cluster, Edge
 from diagrams.onprem.vcs import Github
 from diagrams.onprem.ci import GithubActions
-from diagrams.azure.compute import ContainerApps, FunctionApps
+from diagrams.azure.compute import ContainerApps, FunctionApps, ContainerRegistries
 from diagrams.azure.database import CosmosDb
 from diagrams.azure.storage import StorageAccounts
 from diagrams.azure.network import CDNProfiles
-from diagrams.azure.compute import ContainerRegistries
-from  diagrams.programming.language import Csharp
+from diagrams.azure.identity import ManagedIdentities
 from diagrams.onprem.container import Docker
+from diagrams.programming.language import Csharp
 
 def create_diagram():
     with Diagram("SDLC: Container Apps Deployment", show=False, filename="sdlc-container-apps"):
 
-        # Development Phase
         with Cluster("Development"):
             developer = Csharp("Developer")
             local_docker = Docker("Local Docker")
@@ -32,6 +31,10 @@ def create_diagram():
             function_pipeline = GithubActions("function-app-cd.yml")
 
         with Cluster("Azure tenant"):
+            with Cluster("Federated Identities"):
+                web_identity = ManagedIdentities("web-identity")
+                function_identity = ManagedIdentities("function-identity")
+
             acr = ContainerRegistries("Azure Container Registry")
 
             with Cluster("Container Apps Environment"):
@@ -43,16 +46,19 @@ def create_diagram():
             cdn = CDNProfiles("CDN")
 
         developer >> Edge(label="code & commit") >> github_repo
-        github_repo >> Edge(label="merge to main") >> main_branch
+        github_repo >> Edge(label="push to main") >> main_branch
 
         main_branch >> Edge(label="trigger") >> web_pipeline
         main_branch >> Edge(label="trigger") >> function_pipeline
 
-        web_pipeline >> Edge(label="build & push image") >> acr
+        web_pipeline >> Edge(label="authenticate") >> web_identity
+        function_pipeline >> Edge(label="authenticate") >> function_identity
 
-        function_pipeline >> Edge(label="deploy function") >> function_app
-        web_pipeline >> Edge(label="container app update") >> web_app
+        web_identity >> Edge(label="build & push image") >> acr
+        web_identity >> Edge(label="container app update") >> web_app
         web_app >> Edge(label="pull new image") >> acr
+
+        function_identity >> Edge(label="deploy function") >> function_app
 
         web_app >> cosmos
         function_app >> cosmos
