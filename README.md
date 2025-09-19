@@ -20,6 +20,8 @@ branches:
   App Service with separate environments for test, staging and prod
 - `feature/app-service-deployment-with-deployment-center` - Deployment using
   Azure App Service with deployment slots
+  - `feature/app-service-deployment-with-deployment-center-test`
+  - `feature/app-service-deployment-with-deployment-center-staging`
 
   ![App Service Architecture Diagram](doc/app-service-with-env.png)
 
