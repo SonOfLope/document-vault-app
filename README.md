@@ -45,11 +45,12 @@ branches:
   - `web-app-cd-with-env.yml` : Deployment using App Service with separate
     environments. Can be triggered via workflow_dispatch on branch
     `feature/app-service-deployment-with-environments`
-  - `function-app-cd-with-env.yml` : Deployment using App Service with separate
-    environments. Can be triggered via workflow_dispatch on branch
-    `feature/app-service-deployment-with-environments`
   - `web-app-cd.yml`: Deployment using Container Apps. Can be triggered via
     workflow_dispatch on branch `main` or on push to `main`
+  - Then for the configuration with deployment center, pushes to the following branches will publish to the corresponding slot :
+    - `feature/app-service-deployment-with-deployment-center` → production slot
+  - `feature/app-service-deployment-with-deployment-center-staging` → staging slot
+  - `feature/app-service-deployment-with-deployment-center-test` → test slot
 
 ## DocumentVault Sample app
 
