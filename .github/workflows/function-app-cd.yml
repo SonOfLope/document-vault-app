@@ -29,24 +29,9 @@ jobs:
       DOTNET_VERSION: '8.0'
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      DEFAULT_APP: func-docvaultghpctl27yftf6
+      SELECTED_APP: ${{ github.event.inputs.function_app_name || 'func-docvaultghpctl27yftf6' }}
     steps:
       - uses: actions/checkout@v4
-
-      - id: select
-        shell: bash
-        run: |
-          SELECTED="${{ github.event.inputs.function_app_name }}"
-          if [ -z "$SELECTED" ]; then
-            SELECTED="${DEFAULT_APP}"
-          fi
-          echo "app_name=$SELECTED" >> "$GITHUB_OUTPUT"
-          case "$SELECTED" in
-            func-docvaultghpctl27yftf6) echo "client_id=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
-            func-docvault3ftuued3odxl4) echo "client_id=AZURE_CLIENT_ID_ENV_SLOTS" >> "$GITHUB_OUTPUT" ;;
-            func-docvaultefgaj2t73so3m) echo "client_id=AZURE_CLIENT_ID_DEPLOYMENT_CENTER" >> "$GITHUB_OUTPUT" ;;
-            *) echo "client_id=AZURE_CLIENT_ID_FA_BRANCH" >> "$GITHUB_OUTPUT" ;;
-          esac
 
       - uses: actions/setup-dotnet@v3
         with:
@@ -60,11 +45,11 @@ jobs:
 
       - uses: azure/login@v1
         with:
-          client-id: ${{ secrets[steps.select.outputs.client_id] }}
+          client-id: ${{ fromJson(vars.APP_CLIENT_ID_MAP)[env.SELECTED_APP] }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - uses: Azure/functions-action@v1
         with:
-          app-name: ${{ steps.select.outputs.app_name }}
+          app-name: ${{ env.SELECTED_APP }}
           package: './src/DocumentVault.Function/output'
